@@ -52,5 +52,5 @@ def glicko2_glickman_example():
     r3 = Rating2(1550, 100)
     r4 = Rating2(1700, 300)
     rated = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
-    assert almost(rated) == Rating2(1464.086, 151.507, 0.05999)
+    assert almost(rated) == Rating2(1464.051, 151.515, 0.05999)
     # Rating2(1464.06, 151.52, 0.05999)
