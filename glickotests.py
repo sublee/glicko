@@ -36,21 +36,21 @@ class almost(object):
 @suite.test
 def glicko_glickman_example():
     env = Glicko()
-    r1 = Rating(1500, 200)
-    r2 = Rating(1400, 30)
-    r3 = Rating(1550, 100)
-    r4 = Rating(1700, 300)
+    r1 = env.create_rating(1500, 200)
+    r2 = env.create_rating(1400, 30)
+    r3 = env.create_rating(1550, 100)
+    r4 = env.create_rating(1700, 300)
     rated = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
-    assert almost(rated) == Rating(1464.106, 151.399) # Rating(1464, 151.4)
+    assert almost(rated) == env.create_rating(1464.106, 151.399) # env.create_rating(1464, 151.4)
 
 
 @suite.test
 def glicko2_glickman_example():
     env = Glicko2(tau=0.5)
-    r1 = Rating2(1500, 200, 0.06)
-    r2 = Rating2(1400, 30)
-    r3 = Rating2(1550, 100)
-    r4 = Rating2(1700, 300)
+    r1 = env.create_rating(1500, 200, 0.06)
+    r2 = env.create_rating(1400, 30)
+    r3 = env.create_rating(1550, 100)
+    r4 = env.create_rating(1700, 300)
     rated = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
-    assert almost(rated) == Rating2(1464.051, 151.515, 0.05999)
-    # Rating2(1464.06, 151.52, 0.05999)
+    assert almost(rated) == env.create_rating(1464.051, 151.515, 0.05999)
+    # env.create_rating2(1464.06, 151.52, 0.05999)
