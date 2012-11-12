@@ -26,8 +26,8 @@ class almost(object):
                 return False
         except AttributeError:
             pass
-        return self.almost_equals(self.val.mu, other.mu) and \
-               self.almost_equals(self.val.sigma, other.sigma)
+        return (self.almost_equals(self.val.mu, other.mu) and
+                self.almost_equals(self.val.sigma, other.sigma))
 
     def __repr__(self):
         return repr(self.val)
@@ -41,7 +41,8 @@ def glicko_glickman_example():
     r3 = env.create_rating(1550, 100)
     r4 = env.create_rating(1700, 300)
     rated = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
-    assert almost(rated) == env.create_rating(1464.106, 151.399) # env.create_rating(1464, 151.4)
+    # env.create_rating(1464, 151.4)
+    assert almost(rated) == env.create_rating(1464.106, 151.399)
 
 
 @suite.test
@@ -52,5 +53,5 @@ def glicko2_glickman_example():
     r3 = env.create_rating(1550, 100)
     r4 = env.create_rating(1700, 300)
     rated = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
-    assert almost(rated) == env.create_rating(1464.051, 151.515, 0.05999)
     # env.create_rating2(1464.06, 151.52, 0.05999)
+    assert almost(rated) == env.create_rating(1464.051, 151.515, 0.05999)

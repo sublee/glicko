@@ -80,8 +80,8 @@ class Glicko(object):
             g = self.g(other_rating)
             expected_score = self.expect_score(rating, other_rating, g)
             difference += g * (actual_score - expected_score)
-            d_square_inv += expected_score * (1 - expected_score) * \
-                            (Q ** 2) * (g ** 2)
+            d_square_inv += (
+                expected_score * (1 - expected_score) * (Q ** 2) * (g ** 2))
         denom = 1. / (rating.sigma ** 2) + d_square_inv
         mu = rating.mu + Q / denom * difference
         sigma = sqrt(1 / denom)
@@ -137,8 +137,9 @@ class Glicko2(Glicko):
         alpha = log(rating.volatility ** 2)
         def f(x):
             tmp = sigma ** 2 + variance + exp(x)
-            return exp(x) * (difference_squared - tmp) / (2 * tmp ** 2) - \
-                   (x - alpha) / (self.tau ** 2)
+            return (
+                exp(x) * (difference_squared - tmp) / (2 * tmp ** 2) -
+                (x - alpha) / (self.tau ** 2))
         # 2. Set the initial values of the iterative algorithm.
         a = alpha
         if difference_squared > sigma ** 2 + variance:
@@ -187,8 +188,8 @@ class Glicko2(Glicko):
             expected_score = self.expect_score(rating, other_rating, g)
             variance_inv += g ** 2 * expected_score * (1 - expected_score)
             difference += g * (actual_score - expected_score)
-            d_square_inv += expected_score * (1 - expected_score) * \
-                            (Q ** 2) * (g ** 2)
+            d_square_inv += (
+                expected_score * (1 - expected_score) * (Q ** 2) * (g ** 2))
         difference /= variance_inv
         variance = 1. / variance_inv
         denom = 1. / (rating.sigma ** 2) + d_square_inv
@@ -208,5 +209,5 @@ class Glicko2(Glicko):
 
 
 def rate_1vs1(rating1, rating2, drawn=False):
-    return rate(rating1, [(DRAW if drawn else WIN, rating2)]), \
-           rate(rating2, [(DRAW if drawn else LOSS, rating1)])
+    return (rate(rating1, [(DRAW if drawn else WIN, rating2)]),
+            rate(rating2, [(DRAW if drawn else LOSS, rating1)]))
