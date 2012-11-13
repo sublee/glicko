@@ -11,6 +11,7 @@ setup(
     url='http://github.com/sublee',
     description='An improvement of the Elo rating system',
     platforms='any',
+    py_modules=['glicko', 'glicko2'],
     classifiers=['Development Status :: 1 - Planning',
                  'Intended Audience :: Developers',
                  'License :: OSI Approved :: BSD License',

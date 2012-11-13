@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from attest import Tests, assert_hook, raises
 
-from glicko import *
+from glicko import Glicko, WIN, DRAW, LOSS
+from glicko2 import Glicko2
 
 
 suite = Tests()
