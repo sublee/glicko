@@ -8,11 +8,9 @@
     :copyright: (c) 2012 by Heungsub Lee
     :license: BSD, see LICENSE for more details.
 """
-from datetime import datetime
-from math import exp, log, pi, sqrt
-from time import mktime, time
+import math
 
-from glicko import WIN, DRAW, LOSS, MU, SIGMA, Q
+from glicko import Glicko, WIN, DRAW, LOSS, MU, SIGMA, Q
 
 
 VOLATILITY = 0.06
@@ -33,7 +31,7 @@ class Rating(object):
         return '%s.%s(mu=%.3f, sigma=%.3f, volatility=%.3f)' % args
 
 
-class Glicko2(object):
+class Glicko2(Glicko):
 
     def __init__(self, mu=MU, sigma=SIGMA, volatility=VOLATILITY, tau=TAU,
                  epsilon=EPSILON):
@@ -63,31 +61,31 @@ class Glicko2(object):
         return self.create_rating(mu, sigma, rating.volatility)
 
     def g(self, rating):
-        return 1 / sqrt(1 + (3 * rating.sigma ** 2) / (pi ** 2))
+        return 1 / math.sqrt(1 + (3 * rating.sigma ** 2) / (math.pi ** 2))
 
     def expect_score(self, rating, other_rating, g):
-        return 1. / (1 + exp(-g * (rating.mu - other_rating.mu)))
+        return 1. / (1 + math.exp(-g * (rating.mu - other_rating.mu)))
 
     def determine_volatility(self, rating, difference, variance):
         """Determines new volatility."""
         sigma = rating.sigma
         difference_squared = difference ** 2
         # 1. Let a = ln(s^2), and define f(x)
-        alpha = log(rating.volatility ** 2)
+        alpha = math.log(rating.volatility ** 2)
         def f(x):
-            tmp = sigma ** 2 + variance + exp(x)
-            return (
-                exp(x) * (difference_squared - tmp) / (2 * tmp ** 2) -
-                (x - alpha) / (self.tau ** 2))
+            tmp = sigma ** 2 + variance + math.exp(x)
+            a = math.exp(x) * (difference_squared - tmp) / (2 * tmp ** 2)
+            b = (x - alpha) / (self.tau ** 2)
+            return a - b
         # 2. Set the initial values of the iterative algorithm.
         a = alpha
         if difference_squared > sigma ** 2 + variance:
-            b = log(difference_squared - sigma ** 2 - variance)
+            b = math.log(difference_squared - sigma ** 2 - variance)
         else:
             k = 1
-            while f(alpha - k * sqrt(self.tau ** 2)) < 0:
+            while f(alpha - k * math.sqrt(self.tau ** 2)) < 0:
                 k += 1
-            b = alpha - k * sqrt(self.tau ** 2)
+            b = alpha - k * math.sqrt(self.tau ** 2)
         # 3. Let fA = f(A) and f(B) = f(B)
         f_a, f_b = f(a), f(b)
         # 4. While |B-A| > e, carry out the following steps.
@@ -105,7 +103,7 @@ class Glicko2(object):
                 f_a /= 2
             b, f_b = c, f_c
         # 5. Once |B-A| <= e, set s' <- e^(A/2)
-        return exp(1) ** (a / 2)
+        return math.exp(1) ** (a / 2)
 
     def rate(self, rating, series):
         # Step 2. For each player, convert the rating and RD's onto the
@@ -131,15 +129,15 @@ class Glicko2(object):
         variance = 1. / variance_inv
         denom = 1. / (rating.sigma ** 2) + d_square_inv
         mu = rating.mu + Q / denom * (difference / variance_inv)
-        sigma = sqrt(1 / denom)
+        sigma = math.sqrt(1 / denom)
         # Step 5. Determine the new value, Sigma', ot the volatility. This
         #         computation requires iteration.
         volatility = self.determine_volatility(rating, difference, variance)
         # Step 6. Update the rating deviation to the new pre-rating period
         #         value, Phi*.
-        sigma_star = sqrt(sigma ** 2 + volatility ** 2)
+        sigma_star = math.sqrt(sigma ** 2 + volatility ** 2)
         # Step 7. Update the rating and RD to the new values, Mu' and Phi'.
-        sigma = 1 / sqrt(1 / sigma_star ** 2 + 1 / variance)
+        sigma = 1 / math.sqrt(1 / sigma_star ** 2 + 1 / variance)
         mu = rating.mu + sigma ** 2 * (difference / variance)
         # Step 8. Convert ratings and RD's back to original scale.
         return self.scale_up(self.create_rating(mu, sigma, volatility))

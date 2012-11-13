@@ -8,9 +8,9 @@
     :copyright: (c) 2012 by Heungsub Lee
     :license: BSD, see LICENSE for more details.
 """
-from datetime import datetime
-from math import exp, log, pi, sqrt
-from time import mktime, time
+import datetime
+import math
+import time
 
 
 #: The actual score for win
@@ -23,11 +23,11 @@ LOSS = 0.
 
 MU = 1500
 SIGMA = 350
-Q = log(10) / 400
+Q = math.log(10) / 400
 
 
 def utctime():
-    return mktime(datetime.utcnow().timetuple())
+    return time.mktime(datetime.datetime.utcnow().timetuple())
 
 
 class Rating(object):
@@ -57,8 +57,15 @@ class Glicko(object):
             sigma = self.sigma
         return Rating(mu, sigma, rated_at)
 
+    def volatilize(self, rating):
+        if rating.rated_at is None:
+            return rating
+        sigma = min(math.sqrt(rating.sigma ** 2 + c ** 2 * t), self.sigma)
+        return self.create_rating(rating.mu, sigma, rating.rated_at)
+
     def g(self, rating):
-        return 1 / sqrt(1 + (3 * (Q ** 2) * rating.sigma ** 2) / (pi ** 2))
+        return math.sqrt(1 + (3 * (Q ** 2) * rating.sigma ** 2) /
+                         math.pi ** 2) ** -1
 
     def expect_score(self, rating, other_rating, g):
         return 1. / (1 + 10 ** (g * (rating.mu - other_rating.mu) / -400.))
@@ -76,16 +83,15 @@ class Glicko(object):
                 expected_score * (1 - expected_score) * (Q ** 2) * (g ** 2))
         denom = 1. / (rating.sigma ** 2) + d_square_inv
         mu = rating.mu + Q / denom * difference
-        sigma = sqrt(1 / denom)
+        sigma = math.sqrt(1 / denom)
         return self.create_rating(mu, sigma, rated_at)
+
+    def rate_1vs1(self, rating1, rating2, drawn=False):
+        return (self.rate(rating1, [(DRAW if drawn else WIN, rating2)]),
+                self.rate(rating2, [(DRAW if drawn else LOSS, rating1)]))
 
     def quality_1vs1(self, rating1, rating2):
         expected_score1 = self.expect_score(rating1, rating2, self.g(rating1))
         expected_score2 = self.expect_score(rating2, rating1, self.g(rating2))
         expected_score = (expected_score1 + expected_score2) / 2
         return 2 * (0.5 - abs(0.5 - expected_score))
-
-
-def rate_1vs1(rating1, rating2, drawn=False):
-    return (rate(rating1, [(DRAW if drawn else WIN, rating2)]),
-            rate(rating2, [(DRAW if drawn else LOSS, rating1)]))
