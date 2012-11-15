@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
-from attest import Tests, assert_hook, raises
-
 from glicko import Glicko, WIN, DRAW, LOSS
 from glicko2 import Glicko2
-
-
-suite = Tests()
 
 
 class almost(object):
@@ -34,8 +29,7 @@ class almost(object):
         return repr(self.val)
 
 
-@suite.test
-def glicko_glickman_example():
+def test_glickman_example_of_glicko():
     env = Glicko()
     r1 = env.create_rating(1500, 200)
     r2 = env.create_rating(1400, 30)
@@ -46,8 +40,7 @@ def glicko_glickman_example():
     assert almost(rated) == env.create_rating(1464.106, 151.399)
 
 
-@suite.test
-def glicko2_glickman_example():
+def test_glickman_example_of_glicko2():
     env = Glicko2(tau=0.5)
     r1 = env.create_rating(1500, 200, 0.06)
     r2 = env.create_rating(1400, 30)

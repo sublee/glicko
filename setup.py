@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
+import re
 from setuptools import setup
+from setuptools.command.test import test
+
+
+# use pytest instead
+def run_tests(self):
+    test_file = re.sub(r'\.pyc$', '.py', __import__(self.test_suite).__file__)
+    raise SystemExit(__import__('pytest').main([test_file]))
+test.run_tests = run_tests
 
 
 setup(
     name='glicko',
-    version='0.0',
+    version='0.0.dev',
     license='BSD',
     author='Heungsub Lee',
     author_email='h' '@' 'subl.ee',
@@ -23,7 +32,7 @@ setup(
                  'Programming Language :: Python :: Implementation :: CPython',
                  'Programming Language :: Python :: Implementation :: PyPy',
                  'Topic :: Games/Entertainment'],
-    test_suite='glickotests.suite',
-    test_loader='attest:auto_reporter.test_loader',
-    tests_require=['Attest'],
+    install_requires=['distribute'],
+    test_suite='glickotests',
+    tests_require=['pytest'],
 )
