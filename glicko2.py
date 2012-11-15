@@ -60,11 +60,14 @@ class Glicko2(Glicko):
         sigma = rating.sigma * ratio
         return self.create_rating(mu, sigma, rating.volatility)
 
-    def g(self, rating):
+    def reduce_impact(self, rating):
+        """The original form is `g(RD)`. This function reduces the impact of
+        games as a function of an opponent's RD.
+        """
         return 1 / math.sqrt(1 + (3 * rating.sigma ** 2) / (math.pi ** 2))
 
-    def expect_score(self, rating, other_rating, g):
-        return 1. / (1 + math.exp(-g * (rating.mu - other_rating.mu)))
+    def expect_score(self, rating, other_rating, impact):
+        return 1. / (1 + math.exp(-impact * (rating.mu - other_rating.mu)))
 
     def determine_volatility(self, rating, difference, variance):
         """Determines new volatility."""
@@ -73,6 +76,9 @@ class Glicko2(Glicko):
         # 1. Let a = ln(s^2), and define f(x)
         alpha = math.log(rating.volatility ** 2)
         def f(x):
+            """This function is twice the conditional log-posterior density of
+            sigma, and is the optimality criterion.
+            """
             tmp = sigma ** 2 + variance + math.exp(x)
             a = math.exp(x) * (difference_squared - tmp) / (2 * tmp ** 2)
             b = (x - alpha) / (self.tau ** 2)
@@ -119,15 +125,16 @@ class Glicko2(Glicko):
         difference = 0
         for actual_score, other_rating in series:
             other_rating = self.scale_down(other_rating)
-            g = self.g(other_rating)
-            expected_score = self.expect_score(rating, other_rating, g)
-            variance_inv += g ** 2 * expected_score * (1 - expected_score)
-            difference += g * (actual_score - expected_score)
+            impact = self.reduce_impact(other_rating)
+            expected_score = self.expect_score(rating, other_rating, impact)
+            variance_inv += impact ** 2 * expected_score * (1 - expected_score)
+            difference += impact * (actual_score - expected_score)
             d_square_inv += (
-                expected_score * (1 - expected_score) * (Q ** 2) * (g ** 2))
+                expected_score * (1 - expected_score) *
+                (Q ** 2) * (impact ** 2))
         difference /= variance_inv
         variance = 1. / variance_inv
-        denom = 1. / (rating.sigma ** 2) + d_square_inv
+        denom = rating.sigma ** -2 + d_square_inv
         mu = rating.mu + Q / denom * (difference / variance_inv)
         sigma = math.sqrt(1 / denom)
         # Step 5. Determine the new value, Sigma', ot the volatility. This

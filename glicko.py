@@ -23,6 +23,8 @@ LOSS = 0.
 
 MU = 1500
 SIGMA = 350
+#: A constant which is used to standardize the logistic function to
+#: `1/(1+exp(-x))` from `1/(1+10^(-r/400))`
 Q = math.log(10) / 400
 
 
@@ -63,12 +65,14 @@ class Glicko(object):
         sigma = min(math.sqrt(rating.sigma ** 2 + c ** 2 * t), self.sigma)
         return self.create_rating(rating.mu, sigma, rating.rated_at)
 
-    def g(self, rating):
-        return math.sqrt(1 + (3 * (Q ** 2) * rating.sigma ** 2) /
-                         math.pi ** 2) ** -1
+    def reduce_impact(self, rating):
+        """The original form is `g(RD)`. This function reduces the impact of
+        games as a function of an opponent's RD.
+        """
+        return (1 + (3 * (Q ** 2) * rating.sigma ** 2) / math.pi ** 2) ** -0.5
 
-    def expect_score(self, rating, other_rating, g):
-        return 1. / (1 + 10 ** (g * (rating.mu - other_rating.mu) / -400.))
+    def expect_score(self, rating, other_rating, impact):
+        return 1 / (1 + 10 ** (impact * (rating.mu - other_rating.mu) / -400.))
 
     def rate(self, rating, series, rated_at=None):
         if rated_at is None:
@@ -76,14 +80,15 @@ class Glicko(object):
         d_square_inv = 0
         difference = 0
         for actual_score, other_rating in series:
-            g = self.g(other_rating)
-            expected_score = self.expect_score(rating, other_rating, g)
-            difference += g * (actual_score - expected_score)
+            impact = self.reduce_impact(other_rating)
+            expected_score = self.expect_score(rating, other_rating, impact)
+            difference += impact * (actual_score - expected_score)
             d_square_inv += (
-                expected_score * (1 - expected_score) * (Q ** 2) * (g ** 2))
-        denom = 1. / (rating.sigma ** 2) + d_square_inv
+                expected_score * (1 - expected_score) *
+                (Q ** 2) * (impact ** 2))
+        denom = rating.sigma ** -2 + d_square_inv
         mu = rating.mu + Q / denom * difference
-        sigma = math.sqrt(1 / denom)
+        sigma = math.sqrt(1. / denom)
         return self.create_rating(mu, sigma, rated_at)
 
     def rate_1vs1(self, rating1, rating2, drawn=False):
