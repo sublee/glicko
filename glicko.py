@@ -29,6 +29,7 @@ Q = math.log(10) / 400
 
 
 def utctime():
+    """A function like :func:`time.time` but it uses a time of UTC."""
     return time.mktime(datetime.datetime.utcnow().timetuple())
 
 

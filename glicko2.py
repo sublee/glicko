@@ -16,6 +16,7 @@ from glicko import Glicko, WIN, DRAW, LOSS, MU, SIGMA, Q
 VOLATILITY = 0.06
 TAU = 1.0
 EPSILON = 0.000001
+DELTA = 0.0001
 
 
 class Rating(object):
@@ -69,7 +70,8 @@ class Glicko2(Glicko):
     def expect_score(self, rating, other_rating, impact):
         return 1. / (1 + math.exp(-impact * (rating.mu - other_rating.mu)))
 
-    def determine_volatility(self, rating, difference, variance):
+    def determine_volatility(self, rating, difference, variance,
+                             min_delta=DELTA):
         """Determines new volatility."""
         sigma = rating.sigma
         difference_squared = difference ** 2
@@ -100,7 +102,7 @@ class Glicko2(Glicko):
         #     fA <- fA/2.
         # (c) Set B <- C and fB <- fC.
         # (d) Stop if |B-A| <= e. Repeat the above three steps otherwise.
-        while abs(b - a) > self.epsilon:
+        while abs(b - a) > self.epsilon and abs(b - a) > min_delta:
             c = a + (a - b) * f_a / (f_b - f_a)
             f_c = f(c)
             if f_c * f_b < 0:

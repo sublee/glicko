@@ -49,3 +49,14 @@ def test_glickman_example_of_glicko2():
     rated = env.rate(r1, [(WIN, r2), (LOSS, r3), (LOSS, r4)])
     # env.create_rating2(1464.06, 151.52, 0.05999)
     assert almost(rated) == env.create_rating(1464.051, 151.515, 0.05999)
+
+
+def test_issue1():
+    env = Glicko2()
+    env.determine_volatility(
+        env.create_rating(
+            -3.5744344457376810986204418441047892,
+            1.61207698271845467630214443488512188,
+            1.09021015118913666697153530549257994),
+        19.070260525665084117008518660441041,
+        25.990744829894950385096308309584856)
